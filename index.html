@@ -20,36 +20,12 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
-        h1 {
+        h1, h2 {
             text-align: center;
         }
 
-        .input-section, .meal-plan-section {
+        .day-section {
             margin-bottom: 20px;
-        }
-
-        input, button {
-            padding: 10px;
-            margin: 5px 0;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-
-        input {
-            width: calc(100% - 20px);
-        }
-
-        button {
-            cursor: pointer;
-            background-color: #007BFF;
-            color: white;
-            display: block;
-            width: 100%;
-        }
-
-        button:hover {
-            background-color: #0056b3;
         }
 
         ul {
@@ -57,9 +33,28 @@
             padding: 0;
         }
 
-        #meal-plan-list p {
-            margin: 10px 0;
-            font-size: 18px;
+        li {
+            margin: 5px 0;
+        }
+
+        button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        input {
+            margin-top: 5px;
+            padding: 5px;
+            width: calc(100% - 10px);
         }
     </style>
 </head>
@@ -67,44 +62,64 @@
     <div class="container">
         <h1>Meal Planner</h1>
 
-        <!-- Input Section -->
-        <div class="input-section">
-            <input type="text" id="meal-input" placeholder="Enter a meal name">
-            <button id="add-meal">Add Meal</button>
-        </div>
-
-        <!-- Meal List -->
-        <div class="meal-list">
-            <h2>Meals:</h2>
-            <ul id="meal-list-ul"></ul>
-        </div>
-
-        <!-- Meal Plan Section -->
-        <div class="meal-plan-section">
-            <h2>Meal Plan:</h2>
-            <div id="meal-plan-list">
-                <p id="monday">Monday: </p>
-                <p id="tuesday">Tuesday: </p>
-                <p id="wednesday">Wednesday: </p>
-                <p id="thursday">Thursday: </p>
-                <p id="friday">Friday: </p>
+        <!-- Meal Section -->
+        <div id="meal-sections">
+            <div class="day-section" id="monday-section">
+                <h2>Monday</h2>
+                <ul id="monday-meals"></ul>
+                <input type="text" placeholder="Add a meal" id="monday-input">
+                <button onclick="addMeal('monday')">Add Meal</button>
             </div>
-            <button id="reroll-meals">Reroll Meal Plan</button>
+            <div class="day-section" id="tuesday-section">
+                <h2>Tuesday</h2>
+                <ul id="tuesday-meals"></ul>
+                <input type="text" placeholder="Add a meal" id="tuesday-input">
+                <button onclick="addMeal('tuesday')">Add Meal</button>
+            </div>
+            <div class="day-section" id="wednesday-section">
+                <h2>Wednesday</h2>
+                <ul id="wednesday-meals"></ul>
+                <input type="text" placeholder="Add a meal" id="wednesday-input">
+                <button onclick="addMeal('wednesday')">Add Meal</button>
+            </div>
+            <div class="day-section" id="thursday-section">
+                <h2>Thursday</h2>
+                <ul id="thursday-meals"></ul>
+                <input type="text" placeholder="Add a meal" id="thursday-input">
+                <button onclick="addMeal('thursday')">Add Meal</button>
+            </div>
+            <div class="day-section" id="friday-section">
+                <h2>Friday</h2>
+                <ul id="friday-meals"></ul>
+                <input type="text" placeholder="Add a meal" id="friday-input">
+                <button onclick="addMeal('friday')">Add Meal</button>
+            </div>
         </div>
 
-        <!-- Shareable URL -->
-        <button id="copy-url-btn">Copy URL with Meal Plan</button>
+        <!-- Meal Plan -->
+        <h2>Meal Plan</h2>
+        <div id="meal-plan-list">
+            <p id="monday-plan">Monday: </p>
+            <p id="tuesday-plan">Tuesday: </p>
+            <p id="wednesday-plan">Wednesday: </p>
+            <p id="thursday-plan">Thursday: </p>
+            <p id="friday-plan">Friday: </p>
+        </div>
+        <button id="reroll-meals">Reroll Meal Plan</button>
     </div>
 
     <script>
-        const addMealButton = document.getElementById('add-meal');
-        const mealInput = document.getElementById('meal-input');
-        const mealList = document.getElementById('meal-list-ul');
-        const rerollButton = document.getElementById('reroll-meals');
-        const copyUrlButton = document.getElementById('copy-url-btn');
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
-        let meals = loadFromCookies('meals') || [];
-        let mealPlan = loadFromCookies('mealPlan') || [];
+        // Initialize meals and meal plan from cookies or defaults
+        let allMeals = loadFromCookies('allMeals') || {
+            monday: [],
+            tuesday: [],
+            wednesday: [],
+            thursday: [],
+            friday: []
+        };
+        let mealPlan = loadFromCookies('mealPlan') || {};
 
         // Save data to cookies
         function saveToCookies(key, data) {
@@ -123,104 +138,88 @@
             return null;
         }
 
-        // Render meals list
+        // Render meals for each day
         function renderMeals() {
-            mealList.innerHTML = '';
-            meals.forEach((meal, index) => {
-                const li = document.createElement('li');
-                li.textContent = meal;
+            days.forEach(day => {
+                const mealList = document.getElementById(`${day}-meals`);
+                mealList.innerHTML = '';
+                allMeals[day].forEach((meal, index) => {
+                    const li = document.createElement('li');
+                    li.textContent = meal;
 
-                const editButton = document.createElement('button');
-                editButton.textContent = 'Edit';
-                editButton.style.marginLeft = '10px';
-                editButton.addEventListener('click', () => editMeal(index));
+                    const editButton = document.createElement('button');
+                    editButton.textContent = 'Edit';
+                    editButton.addEventListener('click', () => editMeal(day, index));
 
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'Delete';
-                deleteButton.style.marginLeft = '10px';
-                deleteButton.addEventListener('click', () => deleteMeal(index));
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.addEventListener('click', () => deleteMeal(day, index));
 
-                li.appendChild(editButton);
-                li.appendChild(deleteButton);
-                mealList.appendChild(li);
+                    li.appendChild(editButton);
+                    li.appendChild(deleteButton);
+                    mealList.appendChild(li);
+                });
             });
         }
 
-        // Add meal
-        addMealButton.addEventListener('click', () => {
-            const meal = mealInput.value.trim();
-            if (meal && !meals.includes(meal)) {
-                meals.push(meal);
-                saveToCookies('meals', meals);
-                mealInput.value = '';
+        // Add meal to a specific day
+        function addMeal(day) {
+            const input = document.getElementById(`${day}-input`);
+            const meal = input.value.trim();
+            if (meal && !allMeals[day].includes(meal)) {
+                allMeals[day].push(meal);
+                saveToCookies('allMeals', allMeals);
+                input.value = '';
                 renderMeals();
             } else {
                 alert('Meal is either empty or already added.');
             }
-        });
+        }
 
-        // Edit meal
-        function editMeal(index) {
-            const newMeal = prompt('Edit meal:', meals[index]);
-            if (newMeal && newMeal.trim() && !meals.includes(newMeal.trim())) {
-                meals[index] = newMeal.trim();
-                saveToCookies('meals', meals);
+        // Edit meal for a specific day
+        function editMeal(day, index) {
+            const newMeal = prompt('Edit meal:', allMeals[day][index]);
+            if (newMeal && newMeal.trim() && !allMeals[day].includes(newMeal.trim())) {
+                allMeals[day][index] = newMeal.trim();
+                saveToCookies('allMeals', allMeals);
                 renderMeals();
-            } else if (meals.includes(newMeal.trim())) {
+            } else if (allMeals[day].includes(newMeal.trim())) {
                 alert('Meal already exists.');
             }
         }
 
-        // Delete meal
-        function deleteMeal(index) {
-            meals.splice(index, 1);
-            saveToCookies('meals', meals);
+        // Delete meal from a specific day
+        function deleteMeal(day, index) {
+            allMeals[day].splice(index, 1);
+            saveToCookies('allMeals', allMeals);
             renderMeals();
         }
 
-        // Generate random meal plan
+        // Generate a random meal plan from available meals
         function generateMealPlan() {
-            if (meals.length < 5) {
-                alert('Please add at least 5 meals to generate a plan.');
-                return;
-            }
-            mealPlan = [];
-            const shuffledMeals = meals.sort(() => Math.random() - 0.5);
-            for (let i = 0; i < 5; i++) {
-                mealPlan.push(shuffledMeals[i]);
-            }
+            const newPlan = {};
+            days.forEach(day => {
+                if (allMeals[day].length > 0) {
+                    const randomIndex = Math.floor(Math.random() * allMeals[day].length);
+                    newPlan[day] = allMeals[day][randomIndex];
+                } else {
+                    newPlan[day] = 'No meals available';
+                }
+            });
+            mealPlan = newPlan;
             saveToCookies('mealPlan', mealPlan);
             renderMealPlan();
         }
 
-        // Render meal plan
+        // Render the meal plan
         function renderMealPlan() {
-            document.getElementById('monday').textContent = `Monday: ${mealPlan[0] || ''}`;
-            document.getElementById('tuesday').textContent = `Tuesday: ${mealPlan[1] || ''}`;
-            document.getElementById('wednesday').textContent = `Wednesday: ${mealPlan[2] || ''}`;
-            document.getElementById('thursday').textContent = `Thursday: ${mealPlan[3] || ''}`;
-            document.getElementById('friday').textContent = `Friday: ${mealPlan[4] || ''}`;
+            days.forEach(day => {
+                document.getElementById(`${day}-plan`).textContent = `${day.charAt(0).toUpperCase() + day.slice(1)}: ${mealPlan[day] || ''}`;
+            });
         }
 
-        // Reroll meal plan button
-        rerollButton.addEventListener('click', () => {
-            generateMealPlan();
-        });
-
-        // Copy URL with Base64-encoded meal plan
-        copyUrlButton.addEventListener('click', () => {
-            if (mealPlan.length < 5) {
-                alert('Please generate a meal plan before copying the URL.');
-                return;
-            }
-            const base64Code = btoa(JSON.stringify(mealPlan));
-            const url = `https://daycaremeals.github.io/WhatIsMyKidEating?code=${base64Code}`;
-            navigator.clipboard.writeText(url).then(() => {
-                alert('URL copied to clipboard!');
-            }).catch(() => {
-                alert('Failed to copy URL.');
-            });
-        });
+        // Event listener for reroll button
+        document.getElementById('reroll-meals').addEventListener('click', generateMealPlan);
 
         // Initialize meals and meal plan
         renderMeals();
