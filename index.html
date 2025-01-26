@@ -103,8 +103,25 @@
         const rerollButton = document.getElementById('reroll-meals');
         const copyUrlButton = document.getElementById('copy-url-btn');
 
-        let meals = [];
-        let mealPlan = [];
+        let meals = loadFromCookies('meals') || [];
+        let mealPlan = loadFromCookies('mealPlan') || [];
+
+        // Save data to cookies
+        function saveToCookies(key, data) {
+            document.cookie = `${key}=${encodeURIComponent(JSON.stringify(data))}; path=/; max-age=31536000`;
+        }
+
+        // Load data from cookies
+        function loadFromCookies(key) {
+            const cookies = document.cookie.split('; ');
+            for (const cookie of cookies) {
+                const [cookieKey, value] = cookie.split('=');
+                if (cookieKey === key) {
+                    return JSON.parse(decodeURIComponent(value));
+                }
+            }
+            return null;
+        }
 
         // Render meals list
         function renderMeals() {
@@ -112,10 +129,18 @@
             meals.forEach((meal, index) => {
                 const li = document.createElement('li');
                 li.textContent = meal;
+
+                const editButton = document.createElement('button');
+                editButton.textContent = 'Edit';
+                editButton.style.marginLeft = '10px';
+                editButton.addEventListener('click', () => editMeal(index));
+
                 const deleteButton = document.createElement('button');
                 deleteButton.textContent = 'Delete';
                 deleteButton.style.marginLeft = '10px';
                 deleteButton.addEventListener('click', () => deleteMeal(index));
+
+                li.appendChild(editButton);
                 li.appendChild(deleteButton);
                 mealList.appendChild(li);
             });
@@ -126,6 +151,7 @@
             const meal = mealInput.value.trim();
             if (meal && !meals.includes(meal)) {
                 meals.push(meal);
+                saveToCookies('meals', meals);
                 mealInput.value = '';
                 renderMeals();
             } else {
@@ -133,9 +159,22 @@
             }
         });
 
+        // Edit meal
+        function editMeal(index) {
+            const newMeal = prompt('Edit meal:', meals[index]);
+            if (newMeal && newMeal.trim() && !meals.includes(newMeal.trim())) {
+                meals[index] = newMeal.trim();
+                saveToCookies('meals', meals);
+                renderMeals();
+            } else if (meals.includes(newMeal.trim())) {
+                alert('Meal already exists.');
+            }
+        }
+
         // Delete meal
         function deleteMeal(index) {
             meals.splice(index, 1);
+            saveToCookies('meals', meals);
             renderMeals();
         }
 
@@ -150,6 +189,7 @@
             for (let i = 0; i < 5; i++) {
                 mealPlan.push(shuffledMeals[i]);
             }
+            saveToCookies('mealPlan', mealPlan);
             renderMealPlan();
         }
 
