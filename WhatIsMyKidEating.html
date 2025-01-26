@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Plan</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        #meal-plan-list p {
+            margin: 10px 0;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Meal Plan</h1>
+
+        <!-- Meal Plan Display -->
+        <div id="meal-plan-list">
+            <p id="monday">Monday: </p>
+            <p id="tuesday">Tuesday: </p>
+            <p id="wednesday">Wednesday: </p>
+            <p id="thursday">Thursday: </p>
+            <p id="friday">Friday: </p>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to decode the base64 shortcode
+        function decodeMealPlan(code) {
+            try {
+                const decoded = atob(code);  // Decode base64 string
+                const mealPlan = JSON.parse(decoded);  // Convert to array
+                return mealPlan;
+            } catch (e) {
+                alert('Invalid code!');
+                return null;
+            }
+        }
+
+        // Load meal plan from URL (if available)
+        function loadMealPlanFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            if (code) {
+                const mealPlan = decodeMealPlan(code);
+                if (mealPlan) {
+                    displayMealPlan(mealPlan);
+                }
+            }
+        }
+
+        // Display the meal plan on the page
+        function displayMealPlan(mealPlan) {
+            if (mealPlan && mealPlan.length === 5) {
+                document.getElementById('monday').textContent = `Monday: ${mealPlan[0]}`;
+                document.getElementById('tuesday').textContent = `Tuesday: ${mealPlan[1]}`;
+                document.getElementById('wednesday').textContent = `Wednesday: ${mealPlan[2]}`;
+                document.getElementById('thursday').textContent = `Thursday: ${mealPlan[3]}`;
+                document.getElementById('friday').textContent = `Friday: ${mealPlan[4]}`;
+            }
+        }
+
+        // Load meal plan if code is passed via URL
+        loadMealPlanFromUrl();
+    </script>
+</body>
+</html>
