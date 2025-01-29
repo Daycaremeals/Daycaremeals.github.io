@@ -38,13 +38,16 @@
         }
 
         button {
-            margin-left: 10px;
-            padding: 5px 10px;
+            margin-top: 10px;
+            padding: 8px 12px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             background-color: #007BFF;
             color: white;
+            display: block;
+            width: 100%;
+            text-align: center;
         }
 
         button:hover {
@@ -56,13 +59,20 @@
             padding: 5px;
             width: calc(100% - 10px);
         }
+
+        #copy-status {
+            text-align: center;
+            color: green;
+            display: none;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Meal Planner</h1>
 
-        <!-- Meal Section -->
+        <!-- Meal Sections -->
         <div id="meal-sections">
             <div class="day-section" id="monday-section">
                 <h2>Monday</h2>
@@ -106,27 +116,24 @@
             <p id="friday-plan">Friday: </p>
         </div>
         <button id="reroll-meals">Reroll Meal Plan</button>
+
+        <!-- Copy Link Button -->
+        <button id="copy-link">Copy Shareable Link</button>
+        <p id="copy-status">Link copied!</p>
     </div>
 
     <script>
         const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
-        // Initialize meals and meal plan from cookies or defaults
         let allMeals = loadFromCookies('allMeals') || {
-            monday: [],
-            tuesday: [],
-            wednesday: [],
-            thursday: [],
-            friday: []
+            monday: [], tuesday: [], wednesday: [], thursday: [], friday: []
         };
         let mealPlan = loadFromCookies('mealPlan') || {};
 
-        // Save data to cookies
         function saveToCookies(key, data) {
             document.cookie = `${key}=${encodeURIComponent(JSON.stringify(data))}; path=/; max-age=31536000`;
         }
 
-        // Load data from cookies
         function loadFromCookies(key) {
             const cookies = document.cookie.split('; ');
             for (const cookie of cookies) {
@@ -138,7 +145,6 @@
             return null;
         }
 
-        // Render meals for each day
         function renderMeals() {
             days.forEach(day => {
                 const mealList = document.getElementById(`${day}-meals`);
@@ -146,23 +152,11 @@
                 allMeals[day].forEach((meal, index) => {
                     const li = document.createElement('li');
                     li.textContent = meal;
-
-                    const editButton = document.createElement('button');
-                    editButton.textContent = 'Edit';
-                    editButton.addEventListener('click', () => editMeal(day, index));
-
-                    const deleteButton = document.createElement('button');
-                    deleteButton.textContent = 'Delete';
-                    deleteButton.addEventListener('click', () => deleteMeal(day, index));
-
-                    li.appendChild(editButton);
-                    li.appendChild(deleteButton);
                     mealList.appendChild(li);
                 });
             });
         }
 
-        // Add meal to a specific day
         function addMeal(day) {
             const input = document.getElementById(`${day}-input`);
             const meal = input.value.trim();
@@ -171,31 +165,9 @@
                 saveToCookies('allMeals', allMeals);
                 input.value = '';
                 renderMeals();
-            } else {
-                alert('Meal is either empty or already added.');
             }
         }
 
-        // Edit meal for a specific day
-        function editMeal(day, index) {
-            const newMeal = prompt('Edit meal:', allMeals[day][index]);
-            if (newMeal && newMeal.trim() && !allMeals[day].includes(newMeal.trim())) {
-                allMeals[day][index] = newMeal.trim();
-                saveToCookies('allMeals', allMeals);
-                renderMeals();
-            } else if (allMeals[day].includes(newMeal.trim())) {
-                alert('Meal already exists.');
-            }
-        }
-
-        // Delete meal from a specific day
-        function deleteMeal(day, index) {
-            allMeals[day].splice(index, 1);
-            saveToCookies('allMeals', allMeals);
-            renderMeals();
-        }
-
-        // Generate a random meal plan from available meals
         function generateMealPlan() {
             const newPlan = {};
             days.forEach(day => {
@@ -203,7 +175,7 @@
                     const randomIndex = Math.floor(Math.random() * allMeals[day].length);
                     newPlan[day] = allMeals[day][randomIndex];
                 } else {
-                    newPlan[day] = 'No meals available';
+                    newPlan[day] = 'No meal available';
                 }
             });
             mealPlan = newPlan;
@@ -211,17 +183,32 @@
             renderMealPlan();
         }
 
-        // Render the meal plan
         function renderMealPlan() {
             days.forEach(day => {
                 document.getElementById(`${day}-plan`).textContent = `${day.charAt(0).toUpperCase() + day.slice(1)}: ${mealPlan[day] || ''}`;
             });
         }
 
-        // Event listener for reroll button
         document.getElementById('reroll-meals').addEventListener('click', generateMealPlan);
 
-        // Initialize meals and meal plan
+        // Function to generate and copy the shareable link
+        function copyShareableLink() {
+            const mealPlanArray = days.map(day => mealPlan[day] || "No meal available");
+            const encodedMealPlan = btoa(JSON.stringify(mealPlanArray));
+            const shareableLink = `https://daycaremeals.github.io/WhatIsMyKidEating?code=${encodedMealPlan}`;
+
+            navigator.clipboard.writeText(shareableLink).then(() => {
+                document.getElementById("copy-status").style.display = "block";
+                setTimeout(() => {
+                    document.getElementById("copy-status").style.display = "none";
+                }, 2000);
+            }).catch(err => {
+                alert("Failed to copy link: " + err);
+            });
+        }
+
+        document.getElementById("copy-link").addEventListener("click", copyShareableLink);
+
         renderMeals();
         renderMealPlan();
     </script>
